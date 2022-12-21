@@ -1,51 +1,61 @@
 #!/bin/bash
 
-# 2.  Create "recyclebin" Directory
-mkdir recyclebin
-
-# 3.  The file to be deleted will be a command line argument and the script should be executed as follows: 	bash recycle fileName 
-if [$1 === 'recycle' type && $2 === non directory]
-
-# 4.	The script must test for the following error conditions and display the same kind of error messages as the rm command.
-use case and switch 
-
-    if [no filename]
-    echo "Missing input for filename."
-    echo "Please use this format 'bash recycle fileName'"
-    exit 1 
-    fi
-
-    if [file does not exist]
-    echo "File you entered does not exist."
-    exit 1 
-    fi
-
-    if [directory name provided]
-    echo "Missing input for filename."
-    echo "Please use this format 'bash recycle fileName'"
-    exit 1 
-    fi
-
-    if [filename = reycle]
-    echo "Attempting to delete recycle, operation aborted"
-    exit 1 
-    fi
-
+# Check if recycle bin exists, if not create one.
+if [-e /recyclebin && -d /recyclebin]; then
+    exit 0
+else 
+    mkdir recyclebin
+    exit 0
 fi
 
-# 5.	The filenames in the recyclebin, will be in the following format: fileName_inode
-# For example, if a file named f1 with inode 1234 is recycled, the file in the recyclebin will be named f1_1234. This gets around the potential problem of deleting two files with the same name. The recyclebin will only contain files, not directories. 
-
+# Check if hidden file exists, if not create one.
+if [-e .restore.info]; then
+    exit 0
 else 
-read "confirm file delete ?" (write if else )
-let inode = ls -i fileName
-let filename = filename
-let newname = `${fileName}_${inode}`
+    touch .restore.info
+    exit 0
+fi
 
-touch .restore.info
-echo name of the file , ; , original absolute path of the file >> .restore.info
+# Check if there is at least one argument.
+if [$# >= 1]; then     
+    echo "No filename provided."
+    exit 1
+fi
 
-mv fileName $newname /$HOME/recyclebin
+# Check if we can find the file.
+if [find ../ -name $1]; then      
+    echo "File does not exist."
+    exit 1
+fi
+
+# Check if the file name is 'recycle.sh'.
+if [$1 == "recycle.sh"]; then
+    echo "Attempting to delete recycle – operation aborted."   
+    exit 1
+fi
+
+# Check if file is a directory.
+if [-d $1]; then  
+    echo "Unable to recycle directories."
+    exit 1
+fi
+
+# Find inode and save to variable.
+inode=$(ls -i project | cut -d' ' -f1)
+
+# Find absolute path and save to variable.
+absolutePath=$(readlink -f $1)
+
+# Create new file name.
+newName=$1_$inode
+
+# Rename file and move it to recyclebin.
+mv $1 $newName /$HOME/recyclebin
+
+# Create entry title and update hidden file.
+entry=$newName:$absolutePath
+echo $entry >> .restore.info
+
 exit 0
 
 
