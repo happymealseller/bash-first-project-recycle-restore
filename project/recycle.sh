@@ -1,43 +1,37 @@
 #!/bin/bash
 
 # Check if recycle bin exists, if not create one.
-if [-e /recyclebin && -d /recyclebin]; then
-    exit 0
+if [ -d /$HOME/recyclebin ]; then
+    :
 else 
-    mkdir recyclebin
-    exit 0
+    mkdir recyclebin    
 fi
 
 # Check if hidden file exists, if not create one.
-if [-e .restore.info]; then
-    exit 0
+if [ -e .restore.info ]; then
+    :
 else 
-    touch .restore.info
-    exit 0
+    touch .restore.info    
 fi
 
 # Check if there is at least one argument.
-if [$# >= 1]; then     
-    echo "No filename provided."
-    exit 1
+if [ $# >= 1 ]; then     
+    echo "No filename provided."    
 fi
 
 # Check if we can find the file.
-if [find ../ -name $1]; then      
-    echo "File does not exist."
-    exit 1
+if [ find /project -name $1] ; then      
+    echo "File does not exist."    
 fi
 
 # Check if the file name is 'recycle.sh'.
-if [$1 == "recycle.sh"]; then
-    echo "Attempting to delete recycle – operation aborted."   
-    exit 1
+if [ $1 == recycle.sh ]; then
+    echo "Attempting to delete recycle – operation aborted."       
 fi
 
 # Check if file is a directory.
-if [-d $1]; then  
-    echo "Unable to recycle directories."
-    exit 1
+if [ -d $1 ]; then  
+    echo "Unable to recycle directories."    
 fi
 
 # Find inode and save to variable.
