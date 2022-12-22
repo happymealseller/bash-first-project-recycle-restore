@@ -1,65 +1,46 @@
 #! /bin/bash
 
-# ================================================================================================================= 
-# =============== the guy has to cd to the directory right to run my script right? ================================
-# =============== if so this is fine right? =======================================================================
-# ================================================================================================================= 
+# validate if recycle bin exists, if not create one ===============================================================
+if [ -d /$HOME/recyclebin ]; then 
+    :   
+else 
+    mkdir /$HOME/recyclebin 
 
-# Check if recycle bin exists, if not create one
-if [ -d /$HOME/recyclebin ]; then
+# validate if hidden file exists, if not create one ===============================================================
+if [ -e /$HOME/.restore.info ]; then    
     :
 else 
-    mkdir recyclebin    
+    touch /$HOME/.restore.info    
 fi
 
-# Check if hidden file exists, if not create one
-if [ -e .restore.info ]; then
-    :
-else 
-    touch .restore.info    
-fi
-
-# ================================================================================================================= 
-# =========================================== should i be using "$x" or $x========================================= 
-# =========================================== should i be using elif ============================================== 
-# =========================================== do i need to output error =========================================== 
-# ================================================================================================================= 
-
-# validate we have at least one argument
+# validate we have at least one argument ===========================================================================
 if [ $# -eq 0 ]; then     
     echo "No filename provided -- usage: bash recycle [options] [file...] –- operation aborted" 
     exit 1   
 fi
 
-# validate if we can find the file in root and sub directories
-# =============== the guy has to cd to the directory right to run my script right? =================================
-# =============== if so do i need to even put root? ================================================================
-if [ find / -name $1] ; then    
+# validate if we can find the file in root and sub directories =====================================================
+if [ ! -f $1 ] ; then    
     echo "File does not exist –- operation aborted" 
     exit 1   
 fi
 
-# validate that "recycle.sh" is not within the arugments
-if [[ $@ =~ "recycle.sh" ]]; then
+# validate that argument is not a directory =========================================================================
+if [ -d $1 ]; then  
+    echo "Unable to recycle directories –- operation aborted" 
+    exit 1      
+fi
+
+# validate that "recycle.sh" is not within the arugments ===========================================================
+if [[ $@ =~ "recycle" ]]; then
     echo "Attempting to delete recycle –- operation aborted"       
     exit 1   
 fi
 
-# validate that argument is not a directory
-# =============== the guy has to cd to the directory right to run my script right? =================================
-# =============== if so this is fine right? ========================================================================
-if [ -d $1 ]; then  
-    echo "Unable to recycle directories." 
-    exit 1      
-fi
-
-# ================================================================================================================= 
-# ================================================================================================================= 
-# ================================================================================================================= 
-
+# BELOW HERE NOT TESTED =============================================================================================
 
 # Find inode and save to variable.
-inode=$(ls -i project | cut -d' ' -f1)
+inode=$(ls -i $1 | cut -d' ' -f1)
 
 # Find absolute path and save to variable.
 absolutePath=$(readlink -f $1)
@@ -68,6 +49,7 @@ absolutePath=$(readlink -f $1)
 newName=$1_$inode
 
 # Rename file and move it to recyclebin.
+# ======================================================== ~ or $HOME ==============================================
 mv $1 $newName /$HOME/recyclebin
 
 # Create entry title and update hidden file.
