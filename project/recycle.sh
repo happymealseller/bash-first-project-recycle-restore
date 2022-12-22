@@ -1,38 +1,62 @@
-#!/bin/bash
+#! /bin/bash
 
-# Check if recycle bin exists, if not create one.
+# ================================================================================================================= 
+# =============== the guy has to cd to the directory right to run my script right? ================================
+# =============== if so this is fine right? =======================================================================
+# ================================================================================================================= 
+
+# Check if recycle bin exists, if not create one
 if [ -d /$HOME/recyclebin ]; then
     :
 else 
     mkdir recyclebin    
 fi
 
-# Check if hidden file exists, if not create one.
+# Check if hidden file exists, if not create one
 if [ -e .restore.info ]; then
     :
 else 
     touch .restore.info    
 fi
 
-# Check if there is at least one argument.
-if [ $# >= 1 ]; then     
-    echo "No filename provided."    
+# ================================================================================================================= 
+# =========================================== should i be using "$x" or $x========================================= 
+# =========================================== should i be using elif ============================================== 
+# =========================================== do i need to output error =========================================== 
+# ================================================================================================================= 
+
+# validate we have at least one argument
+if [ $# -eq 0 ]; then     
+    echo "No filename provided -- usage: bash recycle [options] [file...] –- operation aborted" 
+    exit 1   
 fi
 
-# Check if we can find the file.
-if [ find /project -name $1] ; then      
-    echo "File does not exist."    
+# validate if we can find the file in root and sub directories
+# =============== the guy has to cd to the directory right to run my script right? =================================
+# =============== if so do i need to even put root? ================================================================
+if [ find / -name $1] ; then    
+    echo "File does not exist –- operation aborted" 
+    exit 1   
 fi
 
-# Check if the file name is 'recycle.sh'.
-if [ $1 == recycle.sh ]; then
-    echo "Attempting to delete recycle – operation aborted."       
+# validate that "recycle.sh" is not within the arugments
+if [[ $@ =~ "recycle.sh" ]]; then
+    echo "Attempting to delete recycle –- operation aborted"       
+    exit 1   
 fi
 
-# Check if file is a directory.
+# validate that argument is not a directory
+# =============== the guy has to cd to the directory right to run my script right? =================================
+# =============== if so this is fine right? ========================================================================
 if [ -d $1 ]; then  
-    echo "Unable to recycle directories."    
+    echo "Unable to recycle directories." 
+    exit 1      
 fi
+
+# ================================================================================================================= 
+# ================================================================================================================= 
+# ================================================================================================================= 
+
 
 # Find inode and save to variable.
 inode=$(ls -i project | cut -d' ' -f1)
@@ -53,13 +77,11 @@ echo $entry >> .restore.info
 exit 0
 
 
-
-
 # === PHASE 3 ==============================================================================
 create helper func that does read if $1 is -i
 create helper func that does echo if $1 is -v
 create helper func that calls above 2 func if $1 is -vi or -iv
-else if $1 or whatever the -i position is false then echo "$1" exit 1
+else if $1 or whatever the -i position is false then echo "$1" exit 1 . 
 # ==========================================================================================
 
 # === PHASE 4 ==============================================================================
