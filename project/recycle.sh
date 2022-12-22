@@ -55,4 +55,24 @@ exit 0
 
 
 
+# === PHASE 3 ==============================================================================
+create helper func that does read if $1 is -i
+create helper func that does echo if $1 is -v
+create helper func that calls above 2 func if $1 is -vi or -iv
+else if $1 or whatever the -i position is false then echo "$1" exit 1
+# ==========================================================================================
+
+# === PHASE 4 ==============================================================================
+let count = (count argument symbol - 1) 
+for (let i = 0; i <= count; i++){
+    need to put above stuff into func
+    maybe might need to add continue to keep loop runing - fix above syntax first
+    call func
+}
+remember to store abs path and delete the directory in question
+# ==========================================================================================
+
+# === PHASE 5 ==============================================================================
+similar to above
+# ==========================================================================================
 
