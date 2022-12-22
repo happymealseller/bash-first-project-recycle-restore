@@ -31,7 +31,7 @@ originalName=$(grep $1 /$HOME/.restore.info | cut -d: -f1)
 path=$(grep $1 /$HOME/.restore.info | cut -d: -f2)
 
 # move file back to orignial place rename it
-mv $1 $path/$originalName
+mv /$HOME/recyclebin/$1 $path/$originalName
 
 # rewrite file without selected log (test last)
 # grep -v $1 /$HOME/.restore.info > /$HOME/.restore.info

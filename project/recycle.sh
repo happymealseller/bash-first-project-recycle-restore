@@ -45,10 +45,11 @@ inode=$(ls -i $1 | cut -d' ' -f1)
 newName=$1_$inode
 
 # get absolute path and save to variable
-absolutePath=$(readlink -f $1)
+absolutePath=$(readlink -f $1 | cut -d "/" -f1,2,3,4)
+echo $absolutePath
 
 # create entry and update .restore.info
-entry=$newName:$absolutePath
+entry=$newName:$absolutePath/
 echo $entry >> /$HOME/.restore.info
 
 # move file to recyclebin and rename it
