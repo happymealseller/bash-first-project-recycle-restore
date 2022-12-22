@@ -1,63 +1,64 @@
 #! /bin/bash
 
-# validate if recycle bin exists, if not create one ===============================================================
-if [ -d /$HOME/recyclebin ]; then 
-    :   
-else 
-    mkdir /$HOME/recyclebin 
-
-# validate if hidden file exists, if not create one ===============================================================
-if [ -e /$HOME/.restore.info ]; then    
+# validate if recycle bin exists, if not create one 
+if [ -d /$HOME/recyclebin ]; then
     :
-else 
-    touch /$HOME/.restore.info    
+else
+    mkdir /$HOME/recyclebin
 fi
 
-# validate we have at least one argument ===========================================================================
-if [ $# -eq 0 ]; then     
+# validate if hidden file exists, if not create one 
+if [ -e /$HOME/.restore.info ]; then
+    :
+else
+    touch /$HOME/.restore.info
+fi
+
+# validate we have at least one argument 
+if [ $# -eq 0 ]; then
     echo "No filename provided -- usage: bash recycle [options] [file...] –- operation aborted" 
-    exit 1   
+    exit 1
 fi
 
-# validate if we can find the file in root and sub directories =====================================================
-if [ ! -f $1 ] ; then    
-    echo "File does not exist –- operation aborted" 
-    exit 1   
-fi
-
-# validate that argument is not a directory =========================================================================
-if [ -d $1 ]; then  
+# validate that argument is not a directory
+if [ -d $1 ]; then
     echo "Unable to recycle directories –- operation aborted" 
-    exit 1      
+    exit 1
 fi
 
-# validate that "recycle.sh" is not within the arugments ===========================================================
+# validate if we can find the file in root and sub directories 
+if [ ! -f $1 ] ; then
+    echo "File does not exist –- operation aborted" 
+    exit 1
+fi
+
+# validate that "recycle.sh" is not within the arugments
 if [[ $@ =~ "recycle" ]]; then
     echo "Attempting to delete recycle –- operation aborted"       
-    exit 1   
+    exit 1
 fi
 
-# BELOW HERE NOT TESTED =============================================================================================
-
-# Find inode and save to variable.
+# get inode and save to variable
 inode=$(ls -i $1 | cut -d' ' -f1)
 
-# Find absolute path and save to variable.
-absolutePath=$(readlink -f $1)
-
-# Create new file name.
+# combine inode and filename
 newName=$1_$inode
 
-# Rename file and move it to recyclebin.
-# ======================================================== ~ or $HOME ==============================================
-mv $1 $newName /$HOME/recyclebin
+# get absolute path and save to variable
+absolutePath=$(readlink -f $1)
 
-# Create entry title and update hidden file.
+# create entry and update .restore.info
 entry=$newName:$absolutePath
-echo $entry >> .restore.info
+echo $entry >> /$HOME/.restore.info
 
+# move file to recyclebin and rename it
+mv $1 /$HOME/recyclebin/$newName
+
+# output success message
+echo "Success! -- $1 recycled as $newName"
+
+# quit
 exit 0
-
 
 # === PHASE 3 ==============================================================================
 create helper func that does read if $1 is -i
