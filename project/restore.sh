@@ -35,6 +35,7 @@ path=$(grep $1 /$HOME/.restore.info | cut -d":" -f2)
 mv /$HOME/recyclebin/$1 $path/$originalName
 
 # select all except current entry and overwrite log file without selected log
+# grep -v $1 /$HOME/.restore.info | tee /$HOME/.restore.info
 sed -i "/$1/d" /$HOME/.restore.info
 
 # output success message
@@ -42,4 +43,3 @@ echo "Success! -- $originalName restored"
 
 # quit
 exit 0
-
