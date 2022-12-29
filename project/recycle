@@ -27,17 +27,13 @@ function create_bin() {
 function display_error() {
     case "$1" in
     "is_directory")
-        echo "Unable to recycle directories –- operation aborted"  
-        exit 1 ;;  
+        echo "Unable to recycle directories –- operation aborted" ;;  
     "is_self")
-        echo "Unable to recycle 'recycle' –- operation aborted" 
-        exit 1 ;;
+        echo "Unable to recycle 'recycle' –- operation aborted" ;;
     "no_argument")
-        echo "File not provided –- operation aborted" 
-        exit 1 ;;
+        echo "File not provided –- operation aborted" ;;
     "no_exists")
-        echo "File does not exist –- operation aborted" 
-        exit 1 ;;
+        echo "File does not exist –- operation aborted" ;;
     esac 
 }
 
@@ -46,28 +42,32 @@ function display_error() {
 # =======================================================================
 function validate_has_argument() {    
     if [ $1 -eq 0 ]; then
-        display_error "no_argument"        
+        display_error "no_argument"   
+        return 1     
     fi
     return 0
 }
 
 function validate_not_directory() {    
-    if [ -d $1]; then
-        display_error "is_directory"       
+    if [ -d $1 ]; then
+        display_error "is_directory"
+        return 1       
     fi    
     return 0
 }
 
 function validate_file_exist() {      
     if [ ! -f $1 ] ; then
-        display_error "no_exists"        
+        display_error "no_exists"      
+        return 1  
     fi
     return 0
 }
 
 function validate_not_self() {
     if [[ $1 =~ ^recycle$ ]]; then
-        display_error "is_self"        
+        display_error "is_self"      
+        return 1  
     fi
     return 0
 }
@@ -90,36 +90,33 @@ function recycle_recursive() {
   if [ -d $1 ]; then
     cd $1      
     current_dir=$1
-    for file in $(ls); do     
-
+    
+    for file in $(ls); do   
       if [ ! -d $file ]; then
-        echo "$file im not dir"
 	      validate_not_self $file
         recycle $file        
       fi
 
-      if  [ -d $file ]; then
-        echo "$file im aaa dir"           
-        recycle_recursive $file  
-        echo "1 entry $current_dir"
-        echo $(pwd)
-        cd ..
-        echo "2 entry $current_dir"
-        echo $(pwd)
+      if  [ -d $file ]; then          
+        recycle_recursive $file          
+        cd ..        
         rmdir $current_dir
       fi
+    done   
 
     
-
-    done    
-
-    echo "end"  
-    echo "3 entry $current_dir"
-    if [ ! $1 ]; then
-    echo "final_end"
-    fi
     return 0
-  fi  
+  fi 
+
+  echo "not a directory" 
+  
+
+    
+    
+    
+
+    
+   
 }
 
 # =======================================================================
@@ -146,7 +143,8 @@ function perform_options() {
     for arg in $input; do
       read -p "Confirm recycle $arg? y/n" confirmation        
       if [[ ! $confirmation =~ ^[Yy] ]]; then
-        return 1
+        # NEED TO DEAL WITH SHIFTINGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG
+        continue
       fi            
     done
   fi
@@ -167,7 +165,26 @@ function perform_options() {
   #for arg in $input; do
       #recycle $arg     
   #done  
-  
+  for arg in $input; do
+
+    validate_not_directory $arg
+    if [ $? -eq 1 ]; then
+      continue
+    fi 
+    
+    validate_file_exist $arg
+    if [ $? -eq 1 ]; then
+      continue
+    fi 
+    
+    validate_not_self $arg
+    if [ $? -eq 1 ]; then
+      continue
+    fi 
+
+    recycle $arg
+  done  
+
   return 0
 }
 
