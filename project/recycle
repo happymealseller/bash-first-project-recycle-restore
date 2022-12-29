@@ -1,0 +1,173 @@
+#! /bin/bash
+
+# =======================================================================
+# ===== GLOBAL VARIABLES ================================================
+# =======================================================================
+option_interactive=false
+option_verbose=false
+option_recursive=false
+
+# =======================================================================
+# ===== IF BIN & RESTORE DOES NOT EXIST, CREATE THEM ====================
+# =======================================================================
+function create_bin() {
+    if [ ! -d /$HOME/recyclebin ]; then
+        mkdir /$HOME/recyclebin           
+    fi    
+
+    if [ ! -e /$HOME/.restore.info ]; then        
+        touch /$HOME/.restore.info        
+    fi      
+    return 0  
+}
+
+# =======================================================================
+# ===== ERROR MESSAGE ===================================================
+# =======================================================================
+function display_error() {
+    case "$1" in
+    "is_directory")
+        echo "Unable to recycle directories –- operation aborted"  
+        exit 1 ;;  
+    "is_self")
+        echo "Unable to recycle 'recycle' –- operation aborted" 
+        exit 1 ;;
+    "no_argument")
+        echo "File not provided –- operation aborted" 
+        exit 1 ;;
+    "no_exists")
+        echo "File does not exist –- operation aborted" 
+        exit 1 ;;
+    esac 
+}
+
+# =======================================================================
+# ===== VALIDATION TESTS ================================================
+# =======================================================================
+function validate_has_argument() {    
+    if [ $input_num -eq 0 ]; then
+        display_error "no_argument"        
+    fi
+    return 0
+}
+
+function validate_not_directory() {    
+    if [ -d $arg ]; then
+        display_error "is_directory"       
+    fi    
+    return 0
+}
+
+function validate_file_exist() {      
+    if [ ! -f $arg ] ; then
+        display_error "no_exists"        
+    fi
+    return 0
+}
+
+function validate_not_self() {
+    if [[ $arg =~ ^recycle$ ]]; then
+        display_error "is_self"        
+    fi
+    return 0
+}
+
+# =======================================================================
+# ===== RECYCLE =========================================================
+# =======================================================================
+function recycle() {
+    file_inode="$(ls -i $arg | cut -d' ' -f1)"
+    file_path="$(cd "$(dirname "$file_path")"| pwd)"
+    file_recycled_name="${arg}_${file_inode}"
+    file_recycled_entry=$file_recycled_name:$file_path/
+    echo $file_recycled_entry >> /$HOME/.restore.info
+    mv $arg /$HOME/recyclebin/$file_recycled_name
+    echo "Success! -- $arg recycled as $file_recycled_name"
+    return 0
+}
+
+# =======================================================================
+# ===== SET OPTIONS =====================================================
+# =======================================================================
+function set_options() {
+    while getopts :ivr opt
+        do
+        case $opt in
+            i) option_interactive=true;;
+            v) option_verbose=true;;
+            r) option_recursive=true;;
+            *) echo Bad Option - $OPTARG
+            exit 1;;
+        esac
+    done
+}
+
+# =======================================================================
+# ===== DO OPTIONS ======================================================
+# =======================================================================
+function perform_options() {
+  if $option_interactive ; then          
+    for arg in $input; do
+      read -p "Confirm recycle $arg? y/n" confirmation        
+      if [[ ! $confirmation =~ ^[Yy] ]]; then
+        return 1
+      fi            
+    done
+  fi
+
+  if $option_verbose ; then
+    for arg in $input; do
+      echo "Attempting to recycle $arg"            
+    done
+  fi
+  return 0
+
+  if $option_recursive ; then
+    for arg in $input; do
+
+
+}
+
+# =======================================================================
+# ===== MAIN ============================================================
+# =======================================================================
+set_options $@
+shift $[OPTIND-1]
+
+input=$@
+input_num=$#
+
+create_bin
+validate_has_argument $input
+
+perform_options $input
+	
+for arg in $input; do
+  validate_not_directory $arg  
+	validate_file_exist $arg
+	validate_not_self $arg
+  recycle $arg		    	 
+done
+
+
+
+# =======================================================================
+# ===== planning ======================================================
+# ======================================================================= 
+# recrsive function to test
+
+if [ -d $arg ]; then
+  cd $arg
+  ls
+
+  for files in ls; do
+    if [ -d $files ]; then
+      recycle recursive
+    else
+      recycle
+    fi  
+  done     
+
+  cd 
+  rmdir $arg
+fi  
