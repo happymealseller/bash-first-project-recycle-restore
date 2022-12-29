@@ -45,28 +45,28 @@ function display_error() {
 # ===== VALIDATION TESTS ================================================
 # =======================================================================
 function validate_has_argument() {    
-    if [ $input_num -eq 0 ]; then
+    if [ $1 -eq 0 ]; then
         display_error "no_argument"        
     fi
     return 0
 }
 
 function validate_not_directory() {    
-    if [ -d $arg ]; then
+    if [ -d $1]; then
         display_error "is_directory"       
     fi    
     return 0
 }
 
 function validate_file_exist() {      
-    if [ ! -f $arg ] ; then
+    if [ ! -f $1 ] ; then
         display_error "no_exists"        
     fi
     return 0
 }
 
 function validate_not_self() {
-    if [[ $arg =~ ^recycle$ ]]; then
+    if [[ $1 =~ ^recycle$ ]]; then
         display_error "is_self"        
     fi
     return 0
@@ -76,14 +76,50 @@ function validate_not_self() {
 # ===== RECYCLE =========================================================
 # =======================================================================
 function recycle() {
-    file_inode="$(ls -i $arg | cut -d' ' -f1)"
+    file_inode="$(ls -i $1 | cut -d' ' -f1)"
     file_path="$(cd "$(dirname "$file_path")"| pwd)"
-    file_recycled_name="${arg}_${file_inode}"
+    file_recycled_name="${1}_${file_inode}"
     file_recycled_entry=$file_recycled_name:$file_path/
     echo $file_recycled_entry >> /$HOME/.restore.info
-    mv $arg /$HOME/recyclebin/$file_recycled_name
-    echo "Success! -- $arg recycled as $file_recycled_name"
+    mv $1 /$HOME/recyclebin/$file_recycled_name
+    echo "Success! -- $1 recycled as $file_recycled_name"
     return 0
+}
+
+function recycle_recursive() {
+  if [ -d $1 ]; then
+    cd $1      
+    current_dir=$1
+    for file in $(ls); do     
+
+      if [ ! -d $file ]; then
+        echo "$file im not dir"
+	      validate_not_self $file
+        recycle $file        
+      fi
+
+      if  [ -d $file ]; then
+        echo "$file im aaa dir"           
+        recycle_recursive $file  
+        echo "1 entry $current_dir"
+        echo $(pwd)
+        cd ..
+        echo "2 entry $current_dir"
+        echo $(pwd)
+        rmdir $current_dir
+      fi
+
+    
+
+    done    
+
+    echo "end"  
+    echo "3 entry $current_dir"
+    if [ ! $1 ]; then
+    echo "final_end"
+    fi
+    return 0
+  fi  
 }
 
 # =======================================================================
@@ -119,14 +155,30 @@ function perform_options() {
     for arg in $input; do
       echo "Attempting to recycle $arg"            
     done
-  fi
-  return 0
+  fi  
 
   if $option_recursive ; then
     for arg in $input; do
+      recycle_recursive $arg     
+    done
+    return 0
+  fi  
 
-
+  #for arg in $input; do
+      #recycle $arg     
+  #done  
+  
+  return 0
 }
+
+
+
+
+
+
+
+
+
 
 # =======================================================================
 # ===== MAIN ============================================================
@@ -138,36 +190,12 @@ input=$@
 input_num=$#
 
 create_bin
-validate_has_argument $input
+validate_has_argument $input_num
 
 perform_options $input
 	
-for arg in $input; do
-  validate_not_directory $arg  
-	validate_file_exist $arg
-	validate_not_self $arg
-  recycle $arg		    	 
-done
 
 
 
-# =======================================================================
-# ===== planning ======================================================
-# ======================================================================= 
-# recrsive function to test
 
-if [ -d $arg ]; then
-  cd $arg
-  ls
-
-  for files in ls; do
-    if [ -d $files ]; then
-      recycle recursive
-    else
-      recycle
-    fi  
-  done     
-
-  cd 
-  rmdir $arg
-fi  
+ 
