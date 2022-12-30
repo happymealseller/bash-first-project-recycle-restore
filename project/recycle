@@ -173,7 +173,13 @@ function perform_options() {
   if $option_recursive ; then
     for arg in $input; do
       recycle_recursive $arg        
-    done  
+    done 
+
+    if [ -z "$(ls)" ]; then
+      delete_dir=$(pwd)
+      cd ..
+      rmdir $delete_dir 
+    fi  
     return 0
   fi  
 
