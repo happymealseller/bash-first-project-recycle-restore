@@ -1,18 +1,25 @@
 #! /bin/bash
 
-# validate we have at least one argument
+
+# =======================================================================
+# ===== CHECK FOR ARG ===================================================
+# =======================================================================
 if [ $# -eq 0 ]; then
-    echo "No filename provided -- operation aborted" 
-    exit 1
+  echo "No filename provided -- operation aborted" 
+  exit 1
 fi
 
-# validate if we can find the file in recyclebin
+# =======================================================================
+# ===== CHECK IF FILE IN BIN ============================================
+# =======================================================================
 if [ ! -f /$HOME/recyclebin/$1 ] ; then
-    echo "File does not exist –- operation aborted" 
-    exit 1
+  echo "File does not exist –- operation aborted" 
+  exit 1
 fi
 
-# validate if file already exists in pwd 
+# =======================================================================
+# ===== CHECK IF FILE WILL BE OVERWRITTEN ===============================
+# =======================================================================
 if [ -f ./$(echo $1 | cut -d"_" -f1) ]; then    
     read -p "File with similar name exists -- do you want to overwrite? y/n" input
     # prompt for input to overwrite file
@@ -22,23 +29,17 @@ if [ -f ./$(echo $1 | cut -d"_" -f1) ]; then
     fi
 fi
 
-# get original file name
+# ===== GET ORIGINAL NAME ===============================================
 originalName=$(grep $1 /$HOME/.restore.info | cut -d":" -f1 | cut -d"_" -f1)
-
-# get absolute path
+# ===== GET ABSOLUTE PATH  ==============================================
 path=$(grep $1 /$HOME/.restore.info | cut -d":" -f2)
-
-# create missing paths
+# ===== CREATE MISSING DIR ==============================================
 mkdir -p $path
-
-# move file back to orignial place rename it
+# ===== MOVE AND RENAME  ================================================
 mv $HOME/recyclebin/$1 $path$originalName
-
-# remove log entry from  restore.info
+# ===== REMOVE LOG ENTRY ================================================
 sed -i "/$1/d" /$HOME/.restore.info
-
-# output success message
+# ===== OUTPUT SUCCESS ==================================================
 echo "Success! -- $originalName restored"
-
-# quit
+# ===== EXIT ============================================================
 exit 0
