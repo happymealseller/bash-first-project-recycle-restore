@@ -1,7 +1,7 @@
-#! /bin/bash
+#!/bin/bash
 
 # =======================================================================
-# ===== GLOBAL VARIABLES ================================================
+# ===== OPTION VARIABLES ================================================
 # =======================================================================
 option_interactive=false
 option_verbose=false
@@ -26,14 +26,33 @@ function create_bin() {
 # =======================================================================
 function display_error() {
   case "$1" in
-    "is_directory")
-      echo "Unable to recycle directories –- operation aborted";;  
+    "is_directory")  
+      if $option_verbose ; then
+        echo "Unable to recycle directories –- operation aborted" 1>&2 
+      else  
+        echo "Unable to recycle directories –- operation aborted" | 1>&2 
+      fi  ;;
+
     "is_self")
-      echo "Unable to recycle 'recycle' –- operation aborted";;
+      if $option_verbose ; then
+        echo "Unable to recycle 'recycle' –- operation aborted" 1>&2 
+      else  
+        echo "Unable to recycle 'recycle' –- operation aborted" | 1>&2
+      fi  ;;       
+
     "no_argument")
-      echo "File not provided –- operation aborted";;
+      if $option_verbose ; then
+        echo "File not provided –- operation aborted" 1>&2 
+      else  
+        echo "File not provided –- operation aborted" | 1>&2
+      fi  ;;
+
     "no_exists")
-      echo "File does not exist –- operation aborted";;
+      if $option_verbose ; then
+        echo "File does not exist –- operation aborted" 1>&2 
+      else  
+        echo "File does not exist –- operation aborted" | 1>&2
+      fi  ;;
   esac 
 }
 
@@ -45,7 +64,6 @@ function validate_has_argument() {
     display_error "no_argument"   
     exit 1     
   fi
-  return 0
 }
 
 function validate_not_directory() {    
@@ -53,7 +71,6 @@ function validate_not_directory() {
     display_error "is_directory"
     exit 1       
   fi    
-  return 0
 }
 
 function validate_file_exist() {      
@@ -61,7 +78,6 @@ function validate_file_exist() {
     display_error "no_exists"      
     return 1  
   fi
-  return 0
 }
 
 function validate_not_self() {
@@ -69,7 +85,6 @@ function validate_not_self() {
     display_error "is_self"      
     return 1  
   fi
-  return 0
 }
 
 # =======================================================================
@@ -87,10 +102,12 @@ function recycle() {
   file_inode="$(ls -i $1 | cut -d' ' -f1)"
   file_path="$(cd "$(dirname "$file_path")"| pwd)"
   file_recycled_name="${1}_${file_inode}"
-  file_recycled_entry=$file_recycled_name:$file_path/
+  file_recycled_entry=$file_recycled_name:$file_path
   echo $file_recycled_entry >> /$HOME/.restore.info
   mv $1 /$HOME/recyclebin/$file_recycled_name
-  echo "Success! -- $1 recycled as $file_recycled_name"
+  if $option_verbose ; then
+    echo "Success! -- $1 recycled as $file_recycled_name"
+  fi  
   return 0
 }
 

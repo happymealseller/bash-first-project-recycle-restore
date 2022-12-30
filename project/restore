@@ -35,10 +35,11 @@ path=$(grep $1 /$HOME/.restore.info | cut -d":" -f2)
 # ===== CREATE MISSING DIR ==============================================
 mkdir -p $path
 # ===== MOVE AND RENAME  ================================================
-mv $HOME/recyclebin/$1 $path$originalName
+mv $HOME/recyclebin/$1 $path/$originalName
 # ===== REMOVE LOG ENTRY ================================================
 sed -i "/$1/d" /$HOME/.restore.info
 # ===== OUTPUT SUCCESS ==================================================
 echo "Success! -- $originalName restored"
 # ===== EXIT ============================================================
 exit 0
+# =======================================================================
