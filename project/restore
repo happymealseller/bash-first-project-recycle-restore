@@ -2,7 +2,7 @@
 
 # validate we have at least one argument
 if [ $# -eq 0 ]; then
-    echo "No filename provided -- usage: bash restore [options] [file...] –- operation aborted" 
+    echo "No filename provided -- operation aborted" 
     exit 1
 fi
 
@@ -13,14 +13,11 @@ if [ ! -f /$HOME/recyclebin/$1 ] ; then
 fi
 
 # validate if file already exists in pwd 
-if [ -f ./$(echo $1 | cut -d"_" -f1) ]; then
-    echo "File with similar name exists -- do you want to overwrite? y/n"
-    read input
+if [ -f ./$(echo $1 | cut -d"_" -f1) ]; then    
+    read -p "File with similar name exists -- do you want to overwrite? y/n" input
     # prompt for input to overwrite file
-    if [[ $input =~ ^[Yy] ]]; then
-      :
-    else
-      echo "Operation aborted" 
+    if [[ ! $input =~ ^[Yy] ]]; then      
+      echo "Action cancelled -- operation aborted" 
       exit 1
     fi
 fi
@@ -31,11 +28,13 @@ originalName=$(grep $1 /$HOME/.restore.info | cut -d":" -f1 | cut -d"_" -f1)
 # get absolute path
 path=$(grep $1 /$HOME/.restore.info | cut -d":" -f2)
 
-# move file back to orignial place rename it
-mv /$HOME/recyclebin/$1 $path/$originalName
+# create missing paths
+mkdir -p $path
 
-# select all except current entry and overwrite log file without selected log
-# grep -v $1 /$HOME/.restore.info | tee /$HOME/.restore.info
+# move file back to orignial place rename it
+mv $HOME/recyclebin/$1 $path$originalName
+
+# remove log entry from  restore.info
 sed -i "/$1/d" /$HOME/.restore.info
 
 # output success message
