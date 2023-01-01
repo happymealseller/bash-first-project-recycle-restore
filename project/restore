@@ -1,10 +1,10 @@
-#! /bin/bash
+#!/bin/bash
 
 # =======================================================================
 # ===== CHECK FOR ARG ===================================================
 # =======================================================================
 if [ $# -eq 0 ]; then
-  echo "No filename provided -- operation aborted" 
+  echo "No filename provided -- operation aborted" >&2 
   exit 1
 fi
 
@@ -12,7 +12,7 @@ fi
 # ===== CHECK IF FILE IN BIN ============================================
 # =======================================================================
 if [ ! -f /$HOME/recyclebin/$1 ] ; then
-  echo "File does not exist –- operation aborted" 
+  echo "File does not exist –- operation aborted" >&2 
   exit 1
 fi
 
@@ -20,26 +20,28 @@ fi
 # ===== CHECK IF FILE WILL BE OVERWRITTEN ===============================
 # =======================================================================
 if [ -f ./$(echo $1 | cut -d"_" -f1) ]; then    
-    read -p "File with similar name exists -- do you want to overwrite? y/n" input
-    # prompt for input to overwrite file
+    read -p "File with similar name exists -- do you want to overwrite? y/n" input    
     if [[ ! $input =~ ^[Yy] ]]; then      
-      echo "Action cancelled -- operation aborted" 
+      echo "Action cancelled -- operation aborted" >&2 
       exit 1
     fi
 fi
 
 # ===== GET ORIGINAL NAME ===============================================
-originalName=$(grep $1 /$HOME/.restore.info | cut -d":" -f1 | cut -d"_" -f1)
+originalName=$(grep $1 $HOME/.restore.info | cut -d":" -f1 | cut -d"_" -f1)
 # ===== GET ABSOLUTE PATH  ==============================================
-path=$(grep $1 /$HOME/.restore.info | cut -d":" -f2)
+abs_path=$(grep $1 $HOME/.restore.info | cut -d":" -f2)
+dir_path=$(echo $(dirname $abs_path))
 # ===== CREATE MISSING DIR ==============================================
-mkdir -p $path
+mkdir -p $dir_path
 # ===== MOVE AND RENAME  ================================================
-mv $HOME/recyclebin/$1 $path/$originalName
+mv $HOME/recyclebin/$1 $dir_path/$originalName
+if [ $? -eq 1 ]; then
+  echo "Error –- restore was unsuccessful" >&2
+  exit 1
+fi 
 # ===== REMOVE LOG ENTRY ================================================
-sed -i "/$1/d" /$HOME/.restore.info
-# ===== OUTPUT SUCCESS ==================================================
-echo "Success! -- $originalName restored"
+sed -i "/$1/d" $HOME/.restore.info
 # ===== EXIT ============================================================
 exit 0
 # =======================================================================
