@@ -27,32 +27,16 @@ function create_bin() {
 function display_error() {
   case "$1" in
     "is_directory")  
-      if $option_verbose ; then
-        echo "Unable to recycle directories –- operation aborted" 1>&2 
-      else  
-        echo "Unable to recycle directories –- operation aborted" | 1>&2 
-      fi  ;;
+      echo "Unable to recycle directories –- operation aborted" >&2 ;;      
 
     "is_self")
-      if $option_verbose ; then
-        echo "Unable to recycle 'recycle' –- operation aborted" 1>&2 
-      else  
-        echo "Unable to recycle 'recycle' –- operation aborted" | 1>&2
-      fi  ;;       
+      echo "Unable to recycle 'recycle' –- operation aborted" >&2 ;;             
 
     "no_argument")
-      if $option_verbose ; then
-        echo "File not provided –- operation aborted" 1>&2 
-      else  
-        echo "File not provided –- operation aborted" | 1>&2
-      fi  ;;
+      echo "File not provided –- operation aborted" >&2 ;;      
 
     "no_exists")
-      if $option_verbose ; then
-        echo "File does not exist –- operation aborted" 1>&2 
-      else  
-        echo "File does not exist –- operation aborted" | 1>&2
-      fi  ;;
+      echo "File does not exist –- operation aborted" >&2 ;;      
   esac 
 }
 
@@ -69,21 +53,21 @@ function validate_has_argument() {
 function validate_not_directory() {    
   if [ -d $1 ]; then
     display_error "is_directory"
-    exit 1       
+    return 1       
   fi    
 }
 
 function validate_file_exist() {      
   if [ ! -f $1 ] ; then
-    display_error "no_exists"      
-    return 1  
+    display_error "no_exists"    
+    return 1       
   fi
 }
 
 function validate_not_self() {
   if [[ $1 =~ ^recycle$ ]]; then
-    display_error "is_self"      
-    return 1  
+    display_error "is_self"    
+    return 1        
   fi
 }
 
@@ -93,22 +77,32 @@ function validate_not_self() {
 function recycle() {
   validate_file_exist $1
   if [ $? -eq 1 ]; then
-      return 1
+    return 1
   fi 
+
   validate_not_self $1
   if [ $? -eq 1 ]; then
-      return 1
+    return 1
   fi 
-  file_inode="$(ls -i $1 | cut -d' ' -f1)"
-  file_path="$(cd "$(dirname "$file_path")"| pwd)"
+
+  file_inode="$(ls -i $1 | cut -d' ' -f1)"  
+  file_path="$(echo $(realpath $1))"
   file_recycled_name="${1}_${file_inode}"
-  file_recycled_entry=$file_recycled_name:$file_path
-  echo $file_recycled_entry >> /$HOME/.restore.info
+  file_recycled_entry=$file_recycled_name:$file_path  
+  
   mv $1 /$HOME/recyclebin/$file_recycled_name
-  if $option_verbose ; then
-    echo "Success! -- $1 recycled as $file_recycled_name"
-  fi  
-  return 0
+  
+  if [ $? -eq 0 ]; then
+    echo $file_recycled_entry >> /$HOME/.restore.info
+
+    if $option_verbose ; then
+      echo "Success! -- $1 recycled as $file_recycled_name"
+    fi  
+
+    return 0
+  fi
+  
+  return 1
 }
 
 # =======================================================================
@@ -179,12 +173,6 @@ function perform_options() {
         continue
       fi            
     done
-  fi
-
-  if $option_verbose ; then
-    for arg in $input; do
-      echo "Attempting to recycle $arg"            
-    done
   fi  
 
   if $option_recursive ; then
@@ -206,8 +194,7 @@ function perform_options() {
       continue
     fi   
     recycle $arg    
-  done  
-  return 0
+  done    
 }
 
 # =======================================================================
